@@ -1,0 +1,19 @@
+{
+  "name": "electron-app",
+  "version": "1.0.0",
+  "description": "Desktop wrapper for React Native Expo app",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "NODE_ENV=development electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^38.2.2"
+  },
+  "dependencies": {
+    "cross-env": "^10.1.0"
+  }
+}

@@ -4,7 +4,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert, Image, StyleSheet, Scro
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-const API_BASE = 'http://192.168.29.186:5000/api'; // Replace with your PC LAN IP
+const API_BASE = 'http://localhost:5000/api'; // Backend server URL
 
 const styles = StyleSheet.create({
   container: {
@@ -22,11 +22,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
     width: '90%',
     maxWidth: 390,
     alignSelf: 'center',
@@ -74,11 +70,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 6,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',

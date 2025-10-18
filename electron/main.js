@@ -8,11 +8,24 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      webSecurity: true,
     },
   });
 
-  // Load the Expo web app
-  win.loadURL('http://localhost:8081');
+  // Load the Expo web app on the correct port
+  win.loadURL('http://localhost:19006');
+
+  // Set Content Security Policy for security
+  win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Content-Security-Policy': [
+          "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' http://localhost:5000 ws://localhost:19006;"
+        ]
+      }
+    });
+  });
 
   // Open DevTools in development
   if (process.env.NODE_ENV === 'development') {

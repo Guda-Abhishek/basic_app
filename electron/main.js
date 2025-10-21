@@ -15,6 +15,25 @@ function createWindow() {
   // Load the Expo web app on the correct port
   win.loadURL('http://localhost:19006');
 
+  // Wait for the page to load and check if it's the Expo error page
+  win.webContents.on('dom-ready', () => {
+    win.webContents.executeJavaScript(`
+      const checkForErrorPage = () => {
+        const bodyText = document.body.innerText;
+        if (bodyText.includes('Something went wrong') || bodyText.includes('Expo')) {
+          // Reload the page after a short delay
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+        } else {
+          // If the page loaded successfully, do nothing
+          console.log('Expo app loaded successfully');
+        }
+      };
+      checkForErrorPage();
+    `);
+  });
+
   // Set Content Security Policy for security
   win.webContents.session.webRequest.onHeadersReceived((details, callback) => {
     callback({

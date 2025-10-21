@@ -175,7 +175,7 @@ router.post(
   '/upload-guest',
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 3,
+    max: 10,
     message: 'Too many uploads from this IP. Please try again after 15 minutes or log in for higher limits.'
   }),
   upload.single('file'),

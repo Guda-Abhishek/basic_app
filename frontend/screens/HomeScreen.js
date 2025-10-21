@@ -1,20 +1,121 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  StyleSheet, 
-  ScrollView, 
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
   RefreshControl,
   Alert,
-  ActivityIndicator 
+  ActivityIndicator,
+  Platform
 } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
+import Constants from 'expo-constants';
 
-const API_BASE = 'http://localhost:5000/api'; // Backend server URL
+// Axios interceptor for automatic token refresh
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 403 || error.response?.status === 401) {
+      // Try to refresh token
+      try {
+        let refreshToken;
+
+        if (Platform.OS === 'web') {
+          refreshToken = await AsyncStorage.getItem('refreshToken');
+        } else {
+          refreshToken = await SecureStore.getItemAsync('refreshToken');
+          if (!refreshToken) {
+            refreshToken = await AsyncStorage.getItem('refreshToken');
+          }
+        }
+
+        if (refreshToken) {
+          const API_BASE = __DEV__ ? `http://${Constants.expoConfig?.hostUri?.split(':')[0] || 'localhost'}:5000/api` : 'http://localhost:5000/api';
+          const refreshResponse = await axios.post(`${API_BASE}/auth/refresh-token`, {
+            refreshToken
+          });
+
+          const { token: newToken, refreshToken: newRefreshToken } = refreshResponse.data.data;
+
+          // Store new tokens
+          if (Platform.OS === 'web') {
+            await AsyncStorage.setItem('accessToken', newToken);
+            await AsyncStorage.setItem('refreshToken', newRefreshToken);
+          } else {
+            await SecureStore.setItemAsync('accessToken', newToken);
+            await SecureStore.setItemAsync('refreshToken', newRefreshToken);
+          }
+
+          // Update axios default header
+          axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+
+          // Retry the original request
+          originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+          return axios(originalRequest);
+        }
+      } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+        // If refresh fails, clear tokens and redirect to login
+        await clearStoredTokens();
+        // Don't redirect here as it might cause navigation issues
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+// Helper function to clear stored tokens
+const clearStoredTokens = async () => {
+  try {
+    if (Platform.OS === 'web') {
+      // For web, only clear AsyncStorage
+      await Promise.all([
+        AsyncStorage.removeItem('accessToken'),
+        AsyncStorage.removeItem('refreshToken'),
+        AsyncStorage.removeItem('userId'),
+        AsyncStorage.removeItem('userEmail'),
+        AsyncStorage.removeItem('userFullName'),
+        AsyncStorage.removeItem('userPhoneNumber'),
+        AsyncStorage.removeItem('rememberMe')
+      ]);
+    } else {
+      // For native platforms, clear both SecureStore and AsyncStorage
+      const clearSecureStore = [
+        SecureStore.deleteItemAsync('accessToken'),
+        SecureStore.deleteItemAsync('refreshToken'),
+        SecureStore.deleteItemAsync('userId'),
+        SecureStore.deleteItemAsync('userEmail'),
+        SecureStore.deleteItemAsync('userFullName'),
+        SecureStore.deleteItemAsync('userPhoneNumber')
+      ];
+
+      const clearAsyncStorage = [
+        AsyncStorage.removeItem('accessToken'),
+        AsyncStorage.removeItem('refreshToken'),
+        AsyncStorage.removeItem('userId'),
+        AsyncStorage.removeItem('userEmail'),
+        AsyncStorage.removeItem('userFullName'),
+        AsyncStorage.removeItem('userPhoneNumber'),
+        AsyncStorage.removeItem('rememberMe')
+      ];
+
+      await Promise.all([...clearSecureStore, ...clearAsyncStorage]);
+    }
+    delete axios.defaults.headers.common['Authorization'];
+  } catch (error) {
+    console.error('Error clearing tokens:', error);
+  }
+};
+
+const API_BASE = __DEV__ ? `http://${Constants.expoConfig?.hostUri?.split(':')[0] || 'localhost'}:5000/api` : 'http://localhost:5000/api'; // Backend server URL
 
 const styles = StyleSheet.create({
   container: {
@@ -182,12 +283,10 @@ export default function HomeScreen({ navigation }) {
     setIsLoading(true);
     setError(null);
     try {
-      // Check both SecureStore and AsyncStorage for tokens
-      let token = await SecureStore.getItemAsync('accessToken');
-      let userId, userEmail, userFullName, isRemembered;
+      let token, userId, userEmail, userFullName, isRemembered;
 
-      if (!token) {
-        // Check AsyncStorage if not in SecureStore
+      if (Platform.OS === 'web') {
+        // Use AsyncStorage for web to avoid SecureStore issues
         token = await AsyncStorage.getItem('accessToken');
         if (token) {
           userId = await AsyncStorage.getItem('userId');
@@ -196,9 +295,22 @@ export default function HomeScreen({ navigation }) {
           isRemembered = await AsyncStorage.getItem('rememberMe');
         }
       } else {
-        userId = await SecureStore.getItemAsync('userId');
-        userEmail = await SecureStore.getItemAsync('userEmail');
-        userFullName = await SecureStore.getItemAsync('userFullName');
+        // Use SecureStore for native platforms
+        token = await SecureStore.getItemAsync('accessToken');
+        if (!token) {
+          // Fallback to AsyncStorage if not in SecureStore
+          token = await AsyncStorage.getItem('accessToken');
+          if (token) {
+            userId = await AsyncStorage.getItem('userId');
+            userEmail = await AsyncStorage.getItem('userEmail');
+            userFullName = await AsyncStorage.getItem('userFullName');
+            isRemembered = await AsyncStorage.getItem('rememberMe');
+          }
+        } else {
+          userId = await SecureStore.getItemAsync('userId');
+          userEmail = await SecureStore.getItemAsync('userEmail');
+          userFullName = await SecureStore.getItemAsync('userFullName');
+        }
       }
 
       if (token) {
@@ -207,6 +319,8 @@ export default function HomeScreen({ navigation }) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         await fetchFiles();
       } else {
+        // Clear axios default header if no token
+        delete axios.defaults.headers.common['Authorization'];
         setIsGuest(true);
       }
     } catch (error) {
@@ -220,10 +334,8 @@ export default function HomeScreen({ navigation }) {
 
   const fetchFiles = async () => {
     try {
-      const token = await SecureStore.getItemAsync('accessToken');
-      const res = await axios.get(`${API_BASE}/files`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Use the token already set in axios defaults
+      const res = await axios.get(`${API_BASE}/files`);
       setFiles(res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (error) {
       console.error('File fetch error:', error);

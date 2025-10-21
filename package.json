@@ -28,6 +28,7 @@
   "devDependencies": {
     "@babel/core": "^7.28.4",
     "babel-preset-expo": "^54.0.4",
+    "concurrently": "^9.2.1",
     "nativewind": "^4.2.1",
     "react-native-paper": "^5.14.5",
     "react-native-reanimated": "^4.1.3"

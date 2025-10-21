@@ -3,8 +3,9 @@ import { View, Text, TouchableOpacity, FlatList, TextInput, Alert, StyleSheet, S
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
+import Constants from 'expo-constants';
 
-const API_BASE = 'http://192.168.29.186:5000/api';
+const API_BASE = __DEV__ ? `http://${Constants.expoConfig?.hostUri?.split(':')[0] || 'localhost'}:5000/api` : 'http://localhost:5000/api'; // Backend server URL
 
 const styles = StyleSheet.create({
   container: {
@@ -90,7 +91,7 @@ const styles = StyleSheet.create({
 });
 
 export default function TransformScreen({ route, navigation }) {
-  const { file } = route.params;
+  const file = route.params?.file;
   const [data, setData] = useState([]);
   const [headers, setHeaders] = useState([]);
   const [transformations, setTransformations] = useState({
@@ -101,10 +102,14 @@ export default function TransformScreen({ route, navigation }) {
   });
 
   useEffect(() => {
-    loadFileData();
-  }, []);
+    if (file) {
+      loadFileData();
+    }
+  }, [file]);
 
   const loadFileData = async () => {
+    if (!file) return;
+
     try {
       const token = await SecureStore.getItemAsync('accessToken');
       const res = await axios.get(`${API_BASE}/files/${file._id}/download`, {
@@ -191,6 +196,20 @@ export default function TransformScreen({ route, navigation }) {
       ))}
     </View>
   );
+
+  if (!file) {
+    return (
+      <ScrollView style={styles.container}>
+        <Text style={styles.title}>Transform Data</Text>
+        <Text style={{ textAlign: 'center', color: '#6b7280', marginTop: 20 }}>
+          No file selected for transformation.
+        </Text>
+        <TouchableOpacity style={styles.cancelButton} onPress={() => navigation.goBack()}>
+          <Text style={styles.cancelButtonText}>Go Back</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>

@@ -4,8 +4,9 @@ import { View, Text, TextInput, TouchableOpacity, Image, StyleSheet, ActivityInd
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-const API_BASE = 'http://localhost:5000/api'; // Backend server URL
+const API_BASE = __DEV__ ? `http://${Constants.expoConfig?.hostUri?.split(':')[0] || 'localhost'}:5000/api` : 'http://localhost:5000/api'; // Backend server URL
 
 const styles = StyleSheet.create({
   container: {

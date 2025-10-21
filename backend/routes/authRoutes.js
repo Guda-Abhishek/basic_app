@@ -74,14 +74,28 @@ const loginValidation = [
 // Token generation helper
 const signToken = (user) => {
   return jwt.sign(
-    { 
+    {
       id: user._id,
       email: user.email,
       role: user.role
     },
     process.env.JWT_SECRET,
     {
-      expiresIn: process.env.JWT_EXPIRES_IN || '1h'
+      expiresIn: '30d' // 30 days
+    }
+  );
+};
+
+// Refresh token generation helper
+const signRefreshToken = (user) => {
+  return jwt.sign(
+    {
+      id: user._id,
+      email: user.email
+    },
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+    {
+      expiresIn: '30d' // 30 days
     }
   );
 };
@@ -312,8 +326,14 @@ router.post('/login', loginLimiter, loginValidation, async (req, res) => {
     user.lastLogin = Date.now();
     await user.save();
 
-    // Generate token
+    // Generate tokens
     const token = signToken(user);
+    const refreshToken = signRefreshToken(user);
+
+    // Store refresh token in user document
+    user.refreshToken = crypto.createHash('sha256').update(refreshToken).digest('hex');
+    user.refreshTokenExpires = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
+    await user.save();
 
     // Remove sensitive data
     user.password = undefined;
@@ -331,7 +351,8 @@ router.post('/login', loginLimiter, loginValidation, async (req, res) => {
           fullName: user.fullName,
           role: user.role
         },
-        token
+        token,
+        refreshToken
       }
     }, '/dashboard');
   } catch (error) {
@@ -472,11 +493,78 @@ router.patch('/reset-password/:token', async (req, res) => {
 });
 
 // Logout
-router.post('/logout', auth, (req, res) => {
-  res.sendWithRedirect(200, {
-    status: 'success',
-    message: 'Logged out successfully'
-  }, '/auth/login');
+router.post('/logout', auth, async (req, res) => {
+  try {
+    // Clear refresh token from database
+    const user = await User.findById(req.user.id);
+    if (user) {
+      user.refreshToken = undefined;
+      user.refreshTokenExpires = undefined;
+      await user.save();
+    }
+
+    res.sendWithRedirect(200, {
+      status: 'success',
+      message: 'Logged out successfully'
+    }, '/auth/login');
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
+      status: 'error',
+      error: 'Logout failed'
+    });
+  }
+});
+
+// Refresh token route
+router.post('/refresh-token', async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({
+        status: 'error',
+        error: 'Refresh token is required'
+      });
+    }
+
+    // Verify refresh token
+    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+
+    // Find user and check if refresh token matches
+    const user = await User.findById(decoded.id).select('+refreshToken +refreshTokenExpires');
+
+    if (!user || !user.refreshToken || user.refreshToken !== crypto.createHash('sha256').update(refreshToken).digest('hex') || user.refreshTokenExpires < Date.now()) {
+      return res.status(401).json({
+        status: 'error',
+        error: 'Invalid or expired refresh token'
+      });
+    }
+
+    // Generate new tokens
+    const newToken = signToken(user);
+    const newRefreshToken = signRefreshToken(user);
+
+    // Update refresh token in database
+    user.refreshToken = crypto.createHash('sha256').update(newRefreshToken).digest('hex');
+    user.refreshTokenExpires = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days
+    await user.save();
+
+    res.status(200).json({
+      status: 'success',
+      message: 'Token refreshed successfully',
+      data: {
+        token: newToken,
+        refreshToken: newRefreshToken
+      }
+    });
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    res.status(500).json({
+      status: 'error',
+      error: 'Failed to refresh token'
+    });
+  }
 });
 
 module.exports = router;

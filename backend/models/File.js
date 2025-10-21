@@ -15,7 +15,9 @@ const fileSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: [true, 'User ID is required'],
+    required: function() {
+      return !this.metadata || !this.metadata.isGuest;
+    },
     index: true
   },
   originalName: {

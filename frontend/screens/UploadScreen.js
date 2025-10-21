@@ -4,8 +4,9 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as SecureStore from 'expo-secure-store';
 import axios from 'axios';
 import * as FileSystem from 'expo-file-system';
+import Constants from 'expo-constants';
 
-const API_BASE = 'http://192.168.29.186:5000/api'; // Match the IP
+const API_BASE = __DEV__ ? `http://${Constants.expoConfig?.hostUri?.split(':')[0] || 'localhost'}:5000/api` : 'http://localhost:5000/api'; // Backend server URL
 
 const styles = StyleSheet.create({
   container: {
@@ -113,20 +114,8 @@ export default function UploadScreen({ navigation }) {
         }
       );
 
-      Alert.alert(
-        'Success',
-        'File uploaded successfully',
-        [
-          {
-            text: 'Upload Directly',
-            onPress: () => navigation.goBack(),
-          },
-          {
-            text: 'Transform Before Upload',
-            onPress: () => navigation.navigate('Transform', { file: res.data.file }),
-          },
-        ]
-      );
+      // Directly navigate to Transform screen after successful upload
+      navigation.navigate('Transform', { file: res.data.file });
     } catch (error) {
       let errorMessage = 'Upload failed';
       

@@ -161,8 +161,8 @@ userSchema.pre(/^find/, function(next) {
 // Error handling
 userSchema.post('save', function(error, doc, next) {
   if (error.name === 'MongoServerError' && error.code === 11000) {
-    const field = Object.keys(error.keyPattern)[0];
-    next(new Error(`${field.charAt(0).toUpperCase() + field.slice(1)} already exists`));
+    // Don't throw error here, let the route handler deal with it
+    next(error);
   } else {
     next(error);
   }

@@ -3,10 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "concurrently \"expo start\" \"cd ../electron && timeout /t 10 && npm start\"",
+    "start": "concurrently \"npm run web\" \"npm run electron\"",
+    "web": "npx expo start --web",
+    "electron": "wait-on http://localhost:19006 && electron ../electron",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
     "native": "expo start",
     "build:web": "expo export:web",
     "test": "jest",

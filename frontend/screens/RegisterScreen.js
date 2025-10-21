@@ -5,7 +5,7 @@ import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
 
-const API_BASE = __DEV__ ? `http://${Constants.expoConfig?.hostUri?.split(':')[0] || 'localhost'}:5000/api` : 'http://localhost:5000/api'; // Backend server URL
+const API_BASE = __DEV__ ? `http://localhost:5000/api` : 'http://localhost:5000/api'; // Backend server URL
 
 const styles = StyleSheet.create({
   container: {
@@ -124,7 +124,7 @@ const checkPasswordRequirements = (password) => ({
   hasLowerCase: /[a-z]/.test(password),
   hasNumber: /\d/.test(password),
   hasSpecialChar: /[@$!%*?&]/.test(password),
-  hasMinLength: password.length >= 4 && password.length <= 15,
+  hasMinLength: password.length >= 6,
 });
 
 const isPasswordValid = (requirements) =>

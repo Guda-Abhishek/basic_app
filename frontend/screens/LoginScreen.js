@@ -6,7 +6,7 @@ import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
-const API_BASE = __DEV__ ? `http://${Constants.expoConfig?.hostUri?.split(':')[0] || 'localhost'}:5000/api` : 'http://localhost:5000/api'; // Backend server URL
+const API_BASE = __DEV__ ? `http://localhost:5000/api` : 'http://localhost:5000/api';
 
 const styles = StyleSheet.create({
   container: {
@@ -131,35 +131,36 @@ export default function LoginScreen({ navigation, route }) {
         password,
       });
 
-      const { userId, email, fullName, phoneNumber, accessToken, refreshToken } = res.data;
+      const { user, token, refreshToken } = res.data.data;
 
       // Store user data and tokens based on remember me preference
       if (rememberMe) {
         // Store in AsyncStorage for persistent storage
         await Promise.all([
-          AsyncStorage.setItem('userId', userId),
-          AsyncStorage.setItem('userEmail', email),
-          AsyncStorage.setItem('userFullName', fullName),
-          AsyncStorage.setItem('userPhoneNumber', phoneNumber),
-          AsyncStorage.setItem('accessToken', accessToken),
+          AsyncStorage.setItem('userId', user.id),
+          AsyncStorage.setItem('userEmail', user.email),
+          AsyncStorage.setItem('userFullName', user.fullName),
+          AsyncStorage.setItem('userPhoneNumber', user.phoneNumber),
+          AsyncStorage.setItem('accessToken', token),
           AsyncStorage.setItem('refreshToken', refreshToken),
           AsyncStorage.setItem('rememberMe', 'true')
         ]);
       } else {
         // Store in SecureStore for session-only storage
         await Promise.all([
-          SecureStore.setItemAsync('userId', userId),
-          SecureStore.setItemAsync('userEmail', email),
-          SecureStore.setItemAsync('userFullName', fullName),
-          SecureStore.setItemAsync('userPhoneNumber', phoneNumber),
-          SecureStore.setItemAsync('accessToken', accessToken),
+          SecureStore.setItemAsync('userId', user.id),
+          SecureStore.setItemAsync('userEmail', user.email),
+          SecureStore.setItemAsync('userFullName', user.fullName),
+          SecureStore.setItemAsync('userPhoneNumber', user.phoneNumber),
+          SecureStore.setItemAsync('accessToken', token),
           SecureStore.setItemAsync('refreshToken', refreshToken)
         ]);
       }
 
       // Configure axios default headers for future requests
-      axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
-      
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+      // Navigate to Home screen
       navigation.replace('Home');
     } catch (error) {
       let errorMessage = 'Login failed. Please try again.';

@@ -31,15 +31,15 @@ const sendVerificationEmail = async (email, token) => {
   };
 
   try {
-    if (process.env.NODE_ENV === 'development' && process.env.SKIP_EMAIL_VERIFICATION === 'true') {
-      console.log('Email verification skipped in development mode');
+    if ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') && process.env.SKIP_EMAIL_VERIFICATION === 'true') {
+      console.log('Email verification skipped in development/test mode');
       console.log('Verification URL would have been:', verificationUrl);
       return;
     }
     await transporter.sendMail(mailOptions);
   } catch (error) {
     console.error('Error sending verification email:', error);
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
       console.log('Would have sent email to:', email);
       console.log('Verification URL:', verificationUrl);
       return;

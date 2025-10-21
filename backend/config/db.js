@@ -45,7 +45,7 @@ const connectWithRetry = async (uri, options, retries = 5) => {
 };
 
 const connectDB = async () => {
-  const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/fileapp';
+  const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/basicapp';
   const options = {
     useNewUrlParser: true,
     useUnifiedTopology: true,

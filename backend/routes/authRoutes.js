@@ -1,7 +1,7 @@
 // routes/authRoutes.js
 const express = require('express');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const { generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken } = require('../utils/jwt');
 const { promisify } = require('util');
 const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
@@ -73,31 +73,19 @@ const loginValidation = [
 
 // Token generation helper
 const signToken = (user) => {
-  return jwt.sign(
-    {
-      id: user._id,
-      email: user.email,
-      role: user.role
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: '30d' // 30 days
-    }
-  );
+  return generateAccessToken({
+    id: user._id,
+    email: user.email,
+    role: user.role
+  });
 };
 
 // Refresh token generation helper
 const signRefreshToken = (user) => {
-  return jwt.sign(
-    {
-      id: user._id,
-      email: user.email
-    },
-    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-    {
-      expiresIn: '30d' // 30 days
-    }
-  );
+  return generateRefreshToken({
+    id: user._id,
+    email: user.email
+  });
 };
 
 // Register route
@@ -167,8 +155,8 @@ router.post('/register', registerLimiter, registerValidation, async (req, res) =
       }
     }
 
-    // Return success response with redirect
-    res.sendWithRedirect(201, {
+    // Return success response
+    res.status(201).json({
       status: 'success',
       message: 'Registration successful! Please check your email to verify your account.',
       data: {
@@ -178,7 +166,7 @@ router.post('/register', registerLimiter, registerValidation, async (req, res) =
           fullName: user.fullName
         }
       }
-    }, '/auth/login');
+    });
   } catch (error) {
     console.error('Registration error:', error);
     if (error.code === 11000) {
@@ -306,11 +294,11 @@ router.post('/login', loginLimiter, loginValidation, async (req, res) => {
 
     // Check if email is verified
     if (!user.verified) {
-      // In development mode with SKIP_EMAIL_VERIFICATION, auto-verify the user
-      if (process.env.NODE_ENV === 'development' && process.env.SKIP_EMAIL_VERIFICATION === 'true') {
+      // In development or test mode with SKIP_EMAIL_VERIFICATION, auto-verify the user
+      if ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') && process.env.SKIP_EMAIL_VERIFICATION === 'true') {
         user.verified = true;
         await user.save();
-        console.log('Development mode: User auto-verified');
+        console.log(`${process.env.NODE_ENV} mode: User auto-verified`);
       } else {
         return res.sendWithRedirect(403, {
           status: 'error',
@@ -340,8 +328,8 @@ router.post('/login', loginLimiter, loginValidation, async (req, res) => {
     user.loginAttempts = undefined;
     user.lockUntil = undefined;
 
-    // Send success response with redirect
-    res.sendWithRedirect(200, {
+    // Send success response
+    res.status(200).json({
       status: 'success',
       message: 'Login successful',
       data: {
@@ -354,7 +342,7 @@ router.post('/login', loginLimiter, loginValidation, async (req, res) => {
         token,
         refreshToken
       }
-    }, '/dashboard');
+    });
   } catch (error) {
     console.error('Login error:', error);
     console.error('Login error:', error);
@@ -529,7 +517,7 @@ router.post('/refresh-token', async (req, res) => {
     }
 
     // Verify refresh token
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+    const decoded = verifyRefreshToken(refreshToken);
 
     // Find user and check if refresh token matches
     const user = await User.findById(decoded.id).select('+refreshToken +refreshTokenExpires');
@@ -560,6 +548,12 @@ router.post('/refresh-token', async (req, res) => {
     });
   } catch (error) {
     console.error('Token refresh error:', error);
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        status: 'error',
+        error: 'Invalid or expired refresh token'
+      });
+    }
     res.status(500).json({
       status: 'error',
       error: 'Failed to refresh token'

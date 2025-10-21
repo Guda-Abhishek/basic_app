@@ -16,7 +16,7 @@ dotenv.config();
 const connectDB = require('./config/db');
 
 // Constants
-const PORT = 5000; // Force port 5000
+const PORT = process.env.PORT || 5000; // Use env or default to 5000
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const MAX_FILE_SIZE = process.env.MAX_FILE_SIZE || '10mb';
 
@@ -53,6 +53,7 @@ app.use(handleRedirects);
 
 // Import routes
 const authRoutes = require('./routes/authRoutes');
+const fileRoutes = require('./routes/fileRoutes');
 
 // Debug route to test API
 app.get('/api/test', (req, res) => {
@@ -62,14 +63,14 @@ app.get('/api/test', (req, res) => {
 // Request logging middleware
 app.use((req, res, next) => {
   const requestStart = Date.now();
-  
+
   // Log request
   console.log('⬅️ Incoming request:');
   console.log(`   ${req.method} ${req.originalUrl}`);
   console.log('   Headers:', JSON.stringify(req.headers, null, 2));
   console.log('   Body:', req.body);
   console.log('   Query:', req.query);
-  
+
   // Store original res.json to intercept response
   const oldJson = res.json;
   res.json = function(data) {
@@ -77,16 +78,17 @@ app.use((req, res, next) => {
     console.log(`   Status: ${res.statusCode}`);
     console.log('   Body:', JSON.stringify(data, null, 2));
     console.log(`   Time: ${Date.now() - requestStart}ms`);
-    
+
     // Call original json function
     return oldJson.apply(res, arguments);
   };
-  
+
   next();
 });
 
 // Mount routes
 app.use('/api/auth', authRoutes);
+app.use('/api/files', fileRoutes);
 
 // Error handling middleware (must be before 404 handler)
 app.use((err, req, res, next) => {
@@ -145,6 +147,10 @@ const startServer = async () => {
         console.log('🌐 API endpoints:');
         console.log('   - POST /api/auth/register');
         console.log('   - POST /api/auth/login');
+        console.log('   - POST /api/files/upload');
+        console.log('   - GET /api/files');
+        console.log('   - POST /api/files/:id/transform');
+        console.log('   - GET /api/files/:id/visualize');
         console.log('   - GET /api/test');
       });
     };
@@ -171,7 +177,14 @@ process.on('unhandledRejection', (err) => {
   console.error('UNHANDLED REJECTION! 💥 Shutting down...');
   console.error(err.name, err.message);
   console.error(err.stack);
-  server.close(() => {
+  if (server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  } else {
     process.exit(1);
-  });
+  }
 });
+
+// Export app for testing
+module.exports = app;

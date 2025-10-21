@@ -115,7 +115,7 @@ const clearStoredTokens = async () => {
   }
 };
 
-const API_BASE = __DEV__ ? `http://${Constants.expoConfig?.hostUri?.split(':')[0] || 'localhost'}:5000/api` : 'http://localhost:5000/api'; // Backend server URL
+const API_BASE = 'http://localhost:5000/api'; // Backend server URL
 
 const styles = StyleSheet.create({
   container: {
@@ -263,14 +263,14 @@ export default function HomeScreen({ navigation }) {
   // Refresh data when screen is focused
   useFocusEffect(
     useCallback(() => {
-      checkAuth();
+      fetchUserAndFiles();
     }, [])
   );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await checkAuth();
+      await fetchFiles();
     } catch (error) {
       console.error('Refresh error:', error);
       setError('Failed to refresh data');
@@ -279,54 +279,25 @@ export default function HomeScreen({ navigation }) {
     }
   }, []);
 
-  const checkAuth = async () => {
-    setIsLoading(true);
-    setError(null);
+  const fetchUserAndFiles = async () => {
     try {
-      let token, userId, userEmail, userFullName, isRemembered;
+      setError(null);
+      // Fetch user profile
+      const userRes = await axios.get(`${API_BASE}/auth/me`);
+      setUser(userRes.data.data.user);
 
-      if (Platform.OS === 'web') {
-        // Use AsyncStorage for web to avoid SecureStore issues
-        token = await AsyncStorage.getItem('accessToken');
-        if (token) {
-          userId = await AsyncStorage.getItem('userId');
-          userEmail = await AsyncStorage.getItem('userEmail');
-          userFullName = await AsyncStorage.getItem('userFullName');
-          isRemembered = await AsyncStorage.getItem('rememberMe');
-        }
-      } else {
-        // Use SecureStore for native platforms
-        token = await SecureStore.getItemAsync('accessToken');
-        if (!token) {
-          // Fallback to AsyncStorage if not in SecureStore
-          token = await AsyncStorage.getItem('accessToken');
-          if (token) {
-            userId = await AsyncStorage.getItem('userId');
-            userEmail = await AsyncStorage.getItem('userEmail');
-            userFullName = await AsyncStorage.getItem('userFullName');
-            isRemembered = await AsyncStorage.getItem('rememberMe');
-          }
-        } else {
-          userId = await SecureStore.getItemAsync('userId');
-          userEmail = await SecureStore.getItemAsync('userEmail');
-          userFullName = await SecureStore.getItemAsync('userFullName');
-        }
-      }
-
-      if (token) {
-        setUser({ id: userId, email: userEmail, fullName: userFullName });
-        // Set axios default header
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        await fetchFiles();
-      } else {
-        // Clear axios default header if no token
-        delete axios.defaults.headers.common['Authorization'];
-        setIsGuest(true);
-      }
+      // Fetch files
+      const filesRes = await axios.get(`${API_BASE}/files`);
+      setFiles(filesRes.data.data.files.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (error) {
-      console.error('Auth check error:', error);
-      setError('Authentication failed. Please try logging in again.');
-      setIsGuest(true);
+      console.error('Data fetch error:', error);
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        // Token expired or invalid, redirect to login
+        await clearStoredTokens();
+        navigation.replace('Login');
+        return;
+      }
+      setError('Failed to fetch your data. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -336,7 +307,7 @@ export default function HomeScreen({ navigation }) {
     try {
       // Use the token already set in axios defaults
       const res = await axios.get(`${API_BASE}/files`);
-      setFiles(res.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      setFiles(res.data.data.files.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
     } catch (error) {
       console.error('File fetch error:', error);
       setError('Failed to fetch your files. Please try again.');
@@ -346,31 +317,7 @@ export default function HomeScreen({ navigation }) {
 
   const handleLogout = async () => {
     try {
-      // Clear both SecureStore and AsyncStorage
-      const clearSecureStore = [
-        SecureStore.deleteItemAsync('accessToken'),
-        SecureStore.deleteItemAsync('refreshToken'),
-        SecureStore.deleteItemAsync('userId'),
-        SecureStore.deleteItemAsync('userEmail'),
-        SecureStore.deleteItemAsync('userFullName'),
-        SecureStore.deleteItemAsync('userPhoneNumber')
-      ];
-
-      const clearAsyncStorage = [
-        AsyncStorage.removeItem('accessToken'),
-        AsyncStorage.removeItem('refreshToken'),
-        AsyncStorage.removeItem('userId'),
-        AsyncStorage.removeItem('userEmail'),
-        AsyncStorage.removeItem('userFullName'),
-        AsyncStorage.removeItem('userPhoneNumber'),
-        AsyncStorage.removeItem('rememberMe')
-      ];
-
-      await Promise.all([...clearSecureStore, ...clearAsyncStorage]);
-      
-      // Clear axios default header
-      delete axios.defaults.headers.common['Authorization'];
-      
+      await clearStoredTokens();
       navigation.replace('Login');
     } catch (error) {
       console.error('Logout error:', error);

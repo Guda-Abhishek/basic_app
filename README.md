@@ -53,7 +53,7 @@ A complete full-stack application using JavaScript only, supporting mobile (Andr
 3. Set up environment variables:
    Create `.env` file in backend directory:
    ```
-   MONGO_URI=mongodb://localhost:27017/fileapp
+   MONGO_URI=mongodb://localhost:27017/basicapp
    JWT_SECRET=your_jwt_secret_key
    JWT_REFRESH=your_refresh_secret_key
    PORT=5000

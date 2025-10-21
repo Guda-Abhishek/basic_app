@@ -1,8 +1,0 @@
-- [x] Delete node_modules and package-lock.json in root directory
-- [x] Delete node_modules and package-lock.json in backend directory
-- [x] Delete node_modules and package-lock.json in electron directory
-- [x] Delete node_modules and package-lock.json in frontend directory
-- [x] Run npm install --legacy-peer-deps in root directory
-- [x] Run npm install --legacy-peer-deps in backend directory
-- [x] Run npm install --legacy-peer-deps in electron directory
-- [ ] Run npm install --legacy-peer-deps in frontend directory

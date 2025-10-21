@@ -13,64 +13,58 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#e0f2fe',
-    paddingVertical: 20,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
   },
   formContainer: {
     backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
+    borderRadius: 12,
+    padding: 24,
     boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
     width: '90%',
-    maxWidth: 390,
+    maxWidth: 320,
     alignSelf: 'center',
-    marginVertical: 20,
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   logo: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    marginBottom: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    marginBottom: 12,
   },
   title: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#1f2937',
   },
   inputContainer: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   label: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '500',
     color: '#374151',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   input: {
     borderWidth: 1,
     borderColor: '#d1d5db',
     borderRadius: 6,
-    padding: 10,
+    padding: 12,
     backgroundColor: '#f9fafb',
     color: '#111827',
-    fontSize: 10,
+    fontSize: 14,
   },
   inputError: {
     borderColor: '#dc2626',
   },
   button: {
-    backgroundColor: '#10b981',
-    padding: 12,
+    backgroundColor: '#3b82f6',
+    padding: 14,
     borderRadius: 6,
-    marginBottom: 12,
+    marginBottom: 16,
     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
     flexDirection: 'row',
     justifyContent: 'center',
@@ -80,22 +74,22 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     fontWeight: 'bold',
-    fontSize: 10,
+    fontSize: 16,
     marginLeft: 8,
   },
   link: {
-    padding: 4,
+    padding: 6,
   },
   linkText: {
     textAlign: 'center',
     color: '#2563eb',
     fontWeight: '500',
-    fontSize: 11,
+    fontSize: 14,
   },
   errorText: {
     color: '#dc2626',
-    fontSize: 10,
-    marginTop: 2,
+    fontSize: 12,
+    marginTop: 4,
   },
   passwordRequirements: {
     backgroundColor: '#fef2f2',
@@ -103,10 +97,10 @@ const styles = StyleSheet.create({
     borderLeftColor: '#dc2626',
     padding: 10,
     borderRadius: 4,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   requirementItem: {
-    fontSize: 10,
+    fontSize: 12,
     color: '#374151',
     marginVertical: 2,
   },
@@ -253,135 +247,129 @@ export default function RegisterScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.formContainer}>
-          {/* Logo */}
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../assets/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
-            <Text style={styles.title}>Create Account</Text>
-          </View>
-
-          {/* Full Name Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Full Name</Text>
-            <TextInput
-              style={[styles.input, errors.fullName && styles.inputError]}
-              placeholder="Enter your full name"
-              placeholderTextColor="#9CA3AF"
-              value={fullName}
-              onChangeText={(text) => {
-                setFullName(text);
-                if (errors.fullName) {
-                  setErrors({ ...errors, fullName: '' });
-                }
-              }}
-              autoCapitalize="words"
-              editable={!loading}
-            />
-            {errors.fullName && <Text style={styles.errorText}>{errors.fullName}</Text>}
-          </View>
-
-          {/* Email Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email Address</Text>
-            <TextInput
-              style={[styles.input, errors.email && styles.inputError]}
-              placeholder="Enter your email"
-              placeholderTextColor="#9CA3AF"
-              value={email}
-              onChangeText={(text) => {
-                setEmail(text);
-                if (errors.email) {
-                  setErrors({ ...errors, email: '' });
-                }
-              }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              editable={!loading}
-            />
-            {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-          </View>
-
-          {/* Phone Number Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Phone Number</Text>
-            <TextInput
-              style={[styles.input, errors.phoneNumber && styles.inputError]}
-              placeholder="Enter your phone number"
-              placeholderTextColor="#9CA3AF"
-              value={phoneNumber}
-              onChangeText={(text) => {
-                setPhoneNumber(text);
-                if (errors.phoneNumber) {
-                  setErrors({ ...errors, phoneNumber: '' });
-                }
-              }}
-              keyboardType="phone-pad"
-              editable={!loading}
-            />
-            {errors.phoneNumber && <Text style={styles.errorText}>{errors.phoneNumber}</Text>}
-          </View>
-
-          {/* Password Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={[styles.input, errors.password && styles.inputError]}
-              placeholder="Enter your password"
-              placeholderTextColor="#9CA3AF"
-              value={password}
-              onChangeText={handlePasswordChange}
-              secureTextEntry
-              editable={!loading}
-            />
-            {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
-          
-          </View>
-
-          {/* Confirm Password Input */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Confirm Password</Text>
-            <TextInput
-              style={[styles.input, errors.confirmPassword && styles.inputError]}
-              placeholder="Confirm your password"
-              placeholderTextColor="#9CA3AF"
-              value={confirmPassword}
-              onChangeText={(text) => {
-                setConfirmPassword(text);
-                if (errors.confirmPassword) {
-                  setErrors({ ...errors, confirmPassword: '' });
-                }
-              }}
-              secureTextEntry
-              editable={!loading}
-            />
-            {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
-          </View>
-
-          {/* Create Account Button */}
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleRegister}
-            disabled={loading}
-          >
-            {loading && <ActivityIndicator size="small" color="white" />}
-            <Text style={styles.buttonText}>{loading ? 'Creating Account...' : 'Create Account'}</Text>
-          </TouchableOpacity>
-
-          {/* Login Link */}
-          <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('Login')} disabled={loading}>
-            <Text style={styles.linkText}>Already have an account? Sign In</Text>
-          </TouchableOpacity>
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.formContainer}>
+        {/* Logo */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>Create Account</Text>
         </View>
-      </ScrollView>
-    </View>
+
+        {/* Full Name Input */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Full Name</Text>
+          <TextInput
+            style={[styles.input, errors.fullName && styles.inputError]}
+            placeholder="Enter your full name"
+            placeholderTextColor="#9CA3AF"
+            value={fullName}
+            onChangeText={(text) => {
+              setFullName(text);
+              if (errors.fullName) {
+                setErrors({ ...errors, fullName: '' });
+              }
+            }}
+            autoCapitalize="words"
+            editable={!loading}
+          />
+          {errors.fullName && <Text style={styles.errorText}>{errors.fullName}</Text>}
+        </View>
+
+        {/* Email Input */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Email Address</Text>
+          <TextInput
+            style={[styles.input, errors.email && styles.inputError]}
+            placeholder="Enter your email"
+            placeholderTextColor="#9CA3AF"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (errors.email) {
+                setErrors({ ...errors, email: '' });
+              }
+            }}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            editable={!loading}
+          />
+          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+        </View>
+
+        {/* Phone Number Input */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Phone Number</Text>
+          <TextInput
+            style={[styles.input, errors.phoneNumber && styles.inputError]}
+            placeholder="Enter your phone number"
+            placeholderTextColor="#9CA3AF"
+            value={phoneNumber}
+            onChangeText={(text) => {
+              setPhoneNumber(text);
+              if (errors.phoneNumber) {
+                setErrors({ ...errors, phoneNumber: '' });
+              }
+            }}
+            keyboardType="phone-pad"
+            editable={!loading}
+          />
+          {errors.phoneNumber && <Text style={styles.errorText}>{errors.phoneNumber}</Text>}
+        </View>
+
+        {/* Password Input */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            style={[styles.input, errors.password && styles.inputError]}
+            placeholder="Enter your password"
+            placeholderTextColor="#9CA3AF"
+            value={password}
+            onChangeText={handlePasswordChange}
+            secureTextEntry
+            editable={!loading}
+          />
+          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+        </View>
+
+        {/* Confirm Password Input */}
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Confirm Password</Text>
+          <TextInput
+            style={[styles.input, errors.confirmPassword && styles.inputError]}
+            placeholder="Confirm your password"
+            placeholderTextColor="#9CA3AF"
+            value={confirmPassword}
+            onChangeText={(text) => {
+              setConfirmPassword(text);
+              if (errors.confirmPassword) {
+                setErrors({ ...errors, confirmPassword: '' });
+              }
+            }}
+            secureTextEntry
+            editable={!loading}
+          />
+          {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
+        </View>
+
+        {/* Create Account Button */}
+        <TouchableOpacity
+          style={styles.button}
+          onPress={handleRegister}
+          disabled={loading}
+        >
+          {loading && <ActivityIndicator size="small" color="white" />}
+          <Text style={styles.buttonText}>{loading ? 'Creating Account...' : 'Create Account'}</Text>
+        </TouchableOpacity>
+
+        {/* Login Link */}
+        <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('Login')} disabled={loading}>
+          <Text style={styles.linkText}>Already have an account? Sign In</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
   );
 }

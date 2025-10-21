@@ -29,9 +29,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   logo: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     marginBottom: 12,
   },
   title: {

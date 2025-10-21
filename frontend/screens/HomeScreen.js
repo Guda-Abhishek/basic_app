@@ -168,10 +168,12 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    padding: 12,
+    height: 50,
     borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
     marginHorizontal: 4,
+    alignSelf: 'flex-start',
   },
   uploadButton: {
     backgroundColor: '#3b82f6',

@@ -269,13 +269,13 @@ export default function TransformScreen({ navigation }) {
       {/* Navigation Buttons */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 32, marginBottom: 16 }}>
         <TouchableOpacity
-          style={[styles.button, { flex: 1, marginHorizontal: 4, backgroundColor: '#3b82f6' }]}
+          style={{ flex: 1, height: 60, marginHorizontal: 4, backgroundColor: '#3b82f6', borderRadius: 8, alignItems: 'center', justifyContent: 'center' }}
           onPress={() => navigation.navigate('Upload')}
         >
           <Text style={styles.buttonText}>Upload</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.button, { flex: 1, marginHorizontal: 4, backgroundColor: '#8b5cf6' }]}
+          style={{ flex: 1, height: 60, marginHorizontal: 4, backgroundColor: '#8b5cf6', borderRadius: 8, alignItems: 'center', justifyContent: 'center' }}
           onPress={() => navigation.navigate('Visualization')}
         >
           <Text style={styles.buttonText}>Visualize</Text>

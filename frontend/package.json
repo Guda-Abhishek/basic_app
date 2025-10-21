@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "concurrently \"expo start\" \"cd ../electron && npm start\"",
+    "start": "concurrently \"expo start\" \"cd ../electron && timeout /t 10 && npm start\"",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
@@ -46,7 +46,7 @@
   "devDependencies": {
     "@babel/core": "^7.22.6",
     "@babel/preset-env": "^7.22.6",
-    "@expo/webpack-config": "^19.0.0",
+    "@expo/webpack-config": "^19.0.1",
     "@types/react": "~18.2.14",
     "@types/react-native": "^0.72.8",
     "babel-preset-expo": "~9.5.0",

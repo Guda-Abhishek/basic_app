@@ -2,6 +2,11 @@ import { registerRootComponent } from 'expo';
 
 import App from './App';
 
+// Polyfill for global object if not available
+if (typeof global === 'undefined') {
+  window.global = window;
+}
+
 // registerRootComponent calls AppRegistry.registerComponent('main', () => App);
 // It also ensures that whether you load the app in Expo Go or in a native build,
 // the environment is set up appropriately

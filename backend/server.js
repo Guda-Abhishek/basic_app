@@ -18,7 +18,6 @@ const connectDB = require('./config/db');
 // Constants
 const PORT = 5000; // Force port 5000
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const UPLOAD_DIR = path.join(__dirname, 'uploads');
 const MAX_FILE_SIZE = process.env.MAX_FILE_SIZE || '10mb';
 
 // Create Express app
@@ -52,21 +51,8 @@ app.use(morgan(NODE_ENV === 'development' ? 'dev' : 'combined'));
 const handleRedirects = require('./middleware/redirect');
 app.use(handleRedirects);
 
-// Ensure upload directories exist
-const userUploadsDir = path.join(UPLOAD_DIR, 'users');
-const guestUploadsDir = path.join(UPLOAD_DIR, 'guests');
-[userUploadsDir, guestUploadsDir].forEach(dir => {
-  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-});
-
-// Serve static files
-app.use('/uploads/users', express.static(userUploadsDir));
-app.use('/uploads/guests', express.static(guestUploadsDir));
-
 // Import routes
 const authRoutes = require('./routes/authRoutes');
-const fileRoutes = require('./routes/fileRoutes');
-const transformRoutes = require('./routes/transformRoutes');
 
 // Debug route to test API
 app.get('/api/test', (req, res) => {
@@ -101,8 +87,6 @@ app.use((req, res, next) => {
 
 // Mount routes
 app.use('/api/auth', authRoutes);
-app.use('/api/files', fileRoutes);
-app.use('/api/transform', transformRoutes);
 
 // Error handling middleware (must be before 404 handler)
 app.use((err, req, res, next) => {
@@ -158,12 +142,9 @@ const startServer = async () => {
       server.on('listening', () => {
         const actualPort = server.address().port;
         console.log(`✅ Server running in ${NODE_ENV} mode on port ${actualPort}`);
-        console.log(`📁 Upload directories initialized at ${UPLOAD_DIR}`);
         console.log('🌐 API endpoints:');
         console.log('   - POST /api/auth/register');
         console.log('   - POST /api/auth/login');
-        console.log('   - GET /api/files');
-        console.log('   - POST /api/files/upload');
         console.log('   - GET /api/test');
       });
     };
